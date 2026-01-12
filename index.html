@@ -1,0 +1,1879 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>✨ Sparkle Run - A Swiftie Adventure ✨</title>
+    <link href="https://fonts.googleapis.com/css2?family=Pacifico&family=Quicksand:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            font-family: 'Quicksand', sans-serif;
+            overflow: hidden;
+        }
+
+        .stars {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        .star {
+            position: absolute;
+            background: white;
+            border-radius: 50%;
+            animation: twinkle 2s infinite;
+        }
+
+        @keyframes twinkle {
+            0%, 100% { opacity: 0.3; transform: scale(1); }
+            50% { opacity: 1; transform: scale(1.2); }
+        }
+
+        .game-container {
+            position: relative;
+            z-index: 10;
+            text-align: center;
+        }
+
+        h1 {
+            font-family: 'Pacifico', cursive;
+            font-size: 3.5rem;
+            background: linear-gradient(45deg, #ff6b9d, #c44569, #ff9a9e, #fad0c4);
+            background-size: 300% 300%;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            animation: shimmer 3s ease infinite;
+            text-shadow: 0 0 30px rgba(255, 107, 157, 0.5);
+            margin-bottom: 10px;
+        }
+
+        @keyframes shimmer {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        .subtitle {
+            color: #fad0c4;
+            font-size: 1.2rem;
+            margin-bottom: 20px;
+            letter-spacing: 2px;
+        }
+
+        #gameCanvas {
+            border: 4px solid;
+            border-image: linear-gradient(45deg, #ff6b9d, #c44569, #a855f7, #6366f1) 1;
+            border-radius: 12px;
+            box-shadow: 
+                0 0 40px rgba(255, 107, 157, 0.4),
+                0 0 80px rgba(168, 85, 247, 0.2),
+                inset 0 0 60px rgba(0, 0, 0, 0.3);
+            background: linear-gradient(180deg, #2d1f3d 0%, #1a1a2e 100%);
+        }
+
+        .hud {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            width: 800px;
+            padding: 15px 20px;
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 15px 15px 0 0;
+            border: 2px solid rgba(255, 107, 157, 0.3);
+            border-bottom: none;
+        }
+
+        .hud-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            color: white;
+            font-weight: 600;
+            font-size: 1.1rem;
+        }
+
+        .hud-icon {
+            font-size: 1.5rem;
+        }
+
+        .era-badge {
+            background: linear-gradient(45deg, #a855f7, #6366f1);
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-weight: 700;
+            color: white;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            font-size: 0.9rem;
+        }
+
+        .controls {
+            margin-top: 20px;
+            display: flex;
+            gap: 20px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .control-key {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            padding: 12px 20px;
+            border-radius: 12px;
+            color: #fad0c4;
+            font-weight: 600;
+            border: 2px solid rgba(255, 107, 157, 0.3);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .key {
+            background: linear-gradient(45deg, #ff6b9d, #c44569);
+            padding: 5px 12px;
+            border-radius: 6px;
+            color: white;
+            font-weight: 700;
+            min-width: 40px;
+            text-align: center;
+        }
+
+        #startScreen, #gameOverScreen, #winScreen {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 800px;
+            height: 500px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            background: rgba(26, 26, 46, 0.95);
+            backdrop-filter: blur(10px);
+            z-index: 100;
+            border-radius: 8px;
+        }
+
+        .screen-title {
+            font-family: 'Pacifico', cursive;
+            font-size: 3rem;
+            background: linear-gradient(45deg, #ff6b9d, #fad0c4);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 20px;
+        }
+
+        .screen-text {
+            color: #fad0c4;
+            font-size: 1.2rem;
+            margin-bottom: 30px;
+            text-align: center;
+            max-width: 500px;
+            line-height: 1.6;
+        }
+
+        .play-btn {
+            background: linear-gradient(45deg, #ff6b9d, #c44569);
+            border: none;
+            padding: 15px 50px;
+            font-size: 1.3rem;
+            font-weight: 700;
+            color: white;
+            border-radius: 50px;
+            cursor: pointer;
+            font-family: 'Quicksand', sans-serif;
+            transition: all 0.3s ease;
+            box-shadow: 0 10px 30px rgba(255, 107, 157, 0.4);
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+
+        .play-btn:hover {
+            transform: translateY(-3px) scale(1.05);
+            box-shadow: 0 15px 40px rgba(255, 107, 157, 0.6);
+        }
+
+        .emoji-decor {
+            font-size: 4rem;
+            margin-bottom: 20px;
+        }
+
+        .hidden {
+            display: none !important;
+        }
+
+        .final-score {
+            font-size: 2rem;
+            color: #ff6b9d;
+            margin-bottom: 10px;
+            font-weight: 700;
+        }
+
+        .bracelets-collected {
+            font-size: 1.5rem;
+            color: #a855f7;
+            margin-bottom: 20px;
+        }
+
+        .level-complete-banner {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: linear-gradient(45deg, #a855f7, #6366f1);
+            padding: 20px 60px;
+            border-radius: 20px;
+            color: white;
+            font-size: 2rem;
+            font-weight: 700;
+            z-index: 50;
+            animation: popIn 0.5s ease;
+            text-align: center;
+        }
+
+        @keyframes popIn {
+            0% { transform: translate(-50%, -50%) scale(0); opacity: 0; }
+            50% { transform: translate(-50%, -50%) scale(1.1); }
+            100% { transform: translate(-50%, -50%) scale(1); opacity: 1; }
+        }
+
+        .mobile-controls {
+            display: none;
+            gap: 10px;
+            margin-top: 15px;
+        }
+
+        .mobile-btn {
+            background: linear-gradient(45deg, #ff6b9d, #c44569);
+            border: none;
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            font-size: 1.8rem;
+            color: white;
+            cursor: pointer;
+            touch-action: manipulation;
+            box-shadow: 0 5px 20px rgba(255, 107, 157, 0.4);
+        }
+
+        .sound-toggle {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: rgba(255, 255, 255, 0.15);
+            backdrop-filter: blur(10px);
+            border: 2px solid rgba(255, 107, 157, 0.4);
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            font-size: 1.5rem;
+            cursor: pointer;
+            z-index: 1000;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .sound-toggle:hover {
+            background: rgba(255, 107, 157, 0.3);
+            transform: scale(1.1);
+        }
+
+        .sound-toggle.muted {
+            opacity: 0.5;
+        }
+
+        @media (max-width: 850px) {
+            #gameCanvas {
+                width: 100vw;
+                max-width: 800px;
+            }
+            .hud {
+                width: 100vw;
+                max-width: 800px;
+            }
+            h1 {
+                font-size: 2.5rem;
+            }
+            .controls {
+                display: none;
+            }
+            .mobile-controls {
+                display: flex;
+            }
+            #startScreen, #gameOverScreen, #winScreen {
+                width: 100vw;
+                max-width: 800px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <button class="sound-toggle" id="soundToggle" onclick="toggleSound()">🔊</button>
+    <div class="stars" id="stars"></div>
+    
+    <div class="game-container">
+        <h1>✨ Sparkle Run ✨</h1>
+        <p class="subtitle">A Swiftie Adventure</p>
+        
+        <div class="hud">
+            <div class="hud-item">
+                <span class="hud-icon">💖</span>
+                <span>Lives: <span id="lives">3</span></span>
+            </div>
+            <div class="era-badge" id="eraBadge">Lover Era</div>
+            <div class="hud-item">
+                <span class="hud-icon">📿</span>
+                <span>Bracelets: <span id="bracelets">0</span></span>
+            </div>
+            <div class="hud-item">
+                <span class="hud-icon">⭐</span>
+                <span>Score: <span id="score">0</span></span>
+            </div>
+        </div>
+        
+        <div style="position: relative; display: inline-block;">
+            <canvas id="gameCanvas" width="800" height="500"></canvas>
+            
+            <div id="startScreen">
+                <div class="emoji-decor">🎤✨💜</div>
+                <div class="screen-title">Sparkle Run</div>
+                <p class="screen-text">
+                    Help our sparkly hero collect friendship bracelets and sparkles across different musical eras! 
+                    Jump over obstacles, avoid the haters, and dance your way to victory! 🌟
+                </p>
+                <button class="play-btn" onclick="startGame()">Play Now!</button>
+            </div>
+            
+            <div id="gameOverScreen" class="hidden">
+                <div class="emoji-decor">💔</div>
+                <div class="screen-title">Shake It Off!</div>
+                <div class="final-score">Score: <span id="finalScore">0</span></div>
+                <div class="bracelets-collected">📿 Bracelets: <span id="finalBracelets">0</span></div>
+                <p class="screen-text">Don't worry! Every superstar falls sometimes. Get back up and try again! 💪</p>
+                <button class="play-btn" onclick="startGame()">Try Again!</button>
+            </div>
+            
+            <div id="winScreen" class="hidden">
+                <div class="emoji-decor">🏆👑✨</div>
+                <div class="screen-title">You're a Superstar!</div>
+                <div class="final-score">Final Score: <span id="winScore">0</span></div>
+                <div class="bracelets-collected">📿 Total Bracelets: <span id="winBracelets">0</span></div>
+                <p class="screen-text">Amazing! You completed all the eras and collected all the magic! You're the ultimate Swiftie! 🎉</p>
+                <button class="play-btn" onclick="startGame()">Play Again!</button>
+            </div>
+        </div>
+        
+        <div class="controls">
+            <div class="control-key">
+                <span class="key">←</span> Move Left
+            </div>
+            <div class="control-key">
+                <span class="key">→</span> Move Right
+            </div>
+            <div class="control-key">
+                <span class="key">SPACE</span> Jump
+            </div>
+            <div class="control-key">
+                <span class="key">↑</span> Jump
+            </div>
+        </div>
+        
+        <div class="mobile-controls">
+            <button class="mobile-btn" id="leftBtn">⬅️</button>
+            <button class="mobile-btn" id="jumpBtn">⬆️</button>
+            <button class="mobile-btn" id="rightBtn">➡️</button>
+        </div>
+    </div>
+
+    <script>
+        // ============================================
+        // AUDIO SYSTEM - Synthesized Music & Sound FX
+        // ============================================
+        
+        let audioContext = null;
+        let musicPlaying = false;
+        let soundEnabled = true;
+        let currentMusicInterval = null;
+        let masterGain = null;
+        
+        // Initialize Audio Context (must be triggered by user interaction)
+        function initAudio() {
+            if (audioContext) return;
+            
+            audioContext = new (window.AudioContext || window.webkitAudioContext)();
+            masterGain = audioContext.createGain();
+            masterGain.gain.value = 0.3;
+            masterGain.connect(audioContext.destination);
+        }
+        
+        function toggleSound() {
+            soundEnabled = !soundEnabled;
+            const btn = document.getElementById('soundToggle');
+            btn.textContent = soundEnabled ? '🔊' : '🔇';
+            btn.classList.toggle('muted', !soundEnabled);
+            
+            if (masterGain) {
+                masterGain.gain.value = soundEnabled ? 0.3 : 0;
+            }
+            
+            if (!soundEnabled && currentMusicInterval) {
+                clearInterval(currentMusicInterval);
+                currentMusicInterval = null;
+            } else if (soundEnabled && gameState.running) {
+                startMusic();
+            }
+        }
+        
+        // Sound Effects
+        function playSound(type) {
+            if (!audioContext || !soundEnabled) return;
+            
+            const now = audioContext.currentTime;
+            
+            switch(type) {
+                case 'jump':
+                    playTone(440, 0.1, 'sine', 0.2, 880);
+                    break;
+                case 'doubleJump':
+                    playTone(550, 0.1, 'sine', 0.2, 1100);
+                    setTimeout(() => playTone(660, 0.1, 'sine', 0.15, 1320), 50);
+                    break;
+                case 'collect':
+                    playArpeggio([523, 659, 784], 0.08, 'sine', 0.15);
+                    break;
+                case 'bracelet':
+                    playArpeggio([523, 659, 784, 1047], 0.1, 'triangle', 0.2);
+                    break;
+                case 'powerup':
+                    playArpeggio([392, 494, 587, 784, 988], 0.12, 'sine', 0.25);
+                    break;
+                case 'hurt':
+                    playTone(200, 0.3, 'sawtooth', 0.2, 100);
+                    break;
+                case 'levelComplete':
+                    playVictoryFanfare();
+                    break;
+                case 'gameOver':
+                    playTone(300, 0.5, 'sawtooth', 0.2, 100);
+                    setTimeout(() => playTone(250, 0.5, 'sawtooth', 0.15, 80), 300);
+                    break;
+            }
+        }
+        
+        function playTone(startFreq, duration, waveType, volume, endFreq = null) {
+            if (!audioContext || !soundEnabled) return;
+            
+            const oscillator = audioContext.createOscillator();
+            const gainNode = audioContext.createGain();
+            
+            oscillator.type = waveType;
+            oscillator.frequency.setValueAtTime(startFreq, audioContext.currentTime);
+            
+            if (endFreq) {
+                oscillator.frequency.exponentialRampToValueAtTime(endFreq, audioContext.currentTime + duration);
+            }
+            
+            gainNode.gain.setValueAtTime(volume, audioContext.currentTime);
+            gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + duration);
+            
+            oscillator.connect(gainNode);
+            gainNode.connect(masterGain);
+            
+            oscillator.start();
+            oscillator.stop(audioContext.currentTime + duration);
+        }
+        
+        function playArpeggio(frequencies, noteDuration, waveType, volume) {
+            if (!audioContext || !soundEnabled) return;
+            
+            frequencies.forEach((freq, index) => {
+                setTimeout(() => {
+                    playTone(freq, noteDuration, waveType, volume * (1 - index * 0.1));
+                }, index * noteDuration * 500);
+            });
+        }
+        
+        function playVictoryFanfare() {
+            if (!audioContext || !soundEnabled) return;
+            
+            const melody = [523, 523, 523, 698, 880, 784, 698, 880, 1047];
+            const durations = [0.15, 0.15, 0.15, 0.3, 0.15, 0.15, 0.15, 0.3, 0.5];
+            let time = 0;
+            
+            melody.forEach((freq, i) => {
+                setTimeout(() => {
+                    playTone(freq, durations[i], 'sine', 0.2);
+                }, time * 1000);
+                time += durations[i] * 0.8;
+            });
+        }
+        
+        // Era-specific music patterns - BOLLYWOOD STYLE! 🎬💃
+        // Using Indian-influenced scales with faster tempos and rhythmic patterns
+        const eraMusicPatterns = {
+            0: { // Lover Era - Romantic Bollywood (like a love song montage)
+                notes: [523, 587, 659, 698, 784, 880, 784, 698, 659, 587, 523, 587, 659, 784, 880, 988],
+                bass: [262, 262, 294, 294, 330, 330, 294, 294, 262, 262, 294, 330],
+                drums: [1, 0, 1, 1, 0, 1, 1, 0, 1, 0, 1, 1, 0, 1, 0, 1], // Tabla-like pattern
+                tempo: 260,
+                wave: 'sine'
+            },
+            1: { // Midnight Era - Mysterious Bollywood (dramatic night scene)
+                notes: [392, 466, 523, 587, 622, 698, 622, 587, 523, 466, 392, 440, 523, 622, 698, 784],
+                bass: [196, 196, 233, 233, 262, 262, 233, 233, 196, 196, 220, 262],
+                drums: [1, 1, 0, 1, 0, 1, 1, 0, 1, 1, 0, 1, 0, 1, 1, 1],
+                tempo: 240,
+                wave: 'triangle'
+            },
+            2: { // Folklore Era - Folk Bollywood (village dance style)
+                notes: [440, 494, 554, 587, 659, 740, 659, 587, 554, 494, 440, 494, 587, 659, 740, 880],
+                bass: [220, 220, 247, 247, 294, 294, 247, 247, 220, 220, 247, 294],
+                drums: [1, 0, 0, 1, 1, 0, 1, 0, 1, 0, 0, 1, 1, 0, 1, 1],
+                tempo: 280,
+                wave: 'triangle'
+            },
+            3: { // Reputation Era - Item Number (high energy dance)
+                notes: [330, 392, 440, 466, 523, 587, 523, 466, 440, 392, 330, 392, 466, 523, 587, 659],
+                bass: [165, 165, 196, 196, 220, 220, 196, 196, 165, 165, 196, 220],
+                drums: [1, 1, 1, 0, 1, 1, 0, 1, 1, 1, 1, 0, 1, 1, 0, 1],
+                tempo: 300,
+                wave: 'sawtooth'
+            },
+            4: { // 1989 Era - Modern Bollywood Pop (club remix style)
+                notes: [587, 659, 740, 784, 880, 988, 880, 784, 740, 659, 587, 659, 784, 880, 988, 1109],
+                bass: [294, 294, 330, 330, 370, 370, 330, 330, 294, 294, 330, 370],
+                drums: [1, 0, 1, 0, 1, 0, 1, 1, 1, 0, 1, 0, 1, 0, 1, 1],
+                tempo: 320,
+                wave: 'square'
+            }
+        };
+        
+        let currentNoteIndex = 0;
+        let currentBassIndex = 0;
+        
+        function startMusic() {
+            if (!audioContext || !soundEnabled || currentMusicInterval) return;
+            
+            const pattern = eraMusicPatterns[gameState.currentEra] || eraMusicPatterns[0];
+            const beatDuration = 60000 / pattern.tempo;
+            
+            currentNoteIndex = 0;
+            currentBassIndex = 0;
+            
+            currentMusicInterval = setInterval(() => {
+                if (!soundEnabled || !gameState.running) {
+                    stopMusic();
+                    return;
+                }
+                
+                // Play melody note with slight variation for Bollywood feel
+                const note = pattern.notes[currentNoteIndex % pattern.notes.length];
+                const melodySwell = 0.06 + Math.sin(currentNoteIndex * 0.3) * 0.02;
+                playMusicNote(note, beatDuration / 1000 * 0.7, pattern.wave, melodySwell);
+                
+                // Play bass note every 2 beats - punchy Bollywood bass
+                if (currentNoteIndex % 2 === 0) {
+                    const bass = pattern.bass[currentBassIndex % pattern.bass.length];
+                    playMusicNote(bass, beatDuration / 1000 * 1.2, 'sine', 0.05);
+                    currentBassIndex++;
+                }
+                
+                // Tabla/Drum pattern - key for Bollywood feel!
+                if (pattern.drums[currentNoteIndex % pattern.drums.length]) {
+                    playDrumHit(currentNoteIndex % 4 === 0 ? 'dha' : 'ta');
+                }
+                
+                // Add high sparkle accent for Bollywood shimmer
+                if (currentNoteIndex % 4 === 0) {
+                    setTimeout(() => {
+                        playMusicNote(note * 2, 0.04, 'sine', 0.025);
+                    }, beatDuration / 4);
+                }
+                
+                // Add rhythmic fill every 8 beats
+                if (currentNoteIndex % 8 === 7) {
+                    setTimeout(() => playDrumHit('fill'), beatDuration / 2);
+                }
+                
+                currentNoteIndex++;
+            }, beatDuration);
+        }
+        
+        // Tabla-like drum sounds for Bollywood feel
+        function playDrumHit(type) {
+            if (!audioContext || !soundEnabled) return;
+            
+            const osc = audioContext.createOscillator();
+            const gain = audioContext.createGain();
+            const now = audioContext.currentTime;
+            
+            if (type === 'dha') {
+                // Deep tabla hit (dha)
+                osc.frequency.setValueAtTime(150, now);
+                osc.frequency.exponentialRampToValueAtTime(50, now + 0.1);
+                osc.type = 'sine';
+                gain.gain.setValueAtTime(0.15, now);
+                gain.gain.exponentialRampToValueAtTime(0.01, now + 0.15);
+                osc.connect(gain);
+                gain.connect(masterGain);
+                osc.start(now);
+                osc.stop(now + 0.15);
+            } else if (type === 'ta') {
+                // High tabla hit (ta/tin)
+                osc.frequency.setValueAtTime(400, now);
+                osc.frequency.exponentialRampToValueAtTime(200, now + 0.05);
+                osc.type = 'triangle';
+                gain.gain.setValueAtTime(0.08, now);
+                gain.gain.exponentialRampToValueAtTime(0.01, now + 0.08);
+                osc.connect(gain);
+                gain.connect(masterGain);
+                osc.start(now);
+                osc.stop(now + 0.08);
+            } else if (type === 'fill') {
+                // Quick fill
+                [300, 350, 400, 450].forEach((freq, i) => {
+                    setTimeout(() => {
+                        const o = audioContext.createOscillator();
+                        const g = audioContext.createGain();
+                        o.frequency.value = freq;
+                        o.type = 'triangle';
+                        g.gain.setValueAtTime(0.05, audioContext.currentTime);
+                        g.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.04);
+                        o.connect(g);
+                        g.connect(masterGain);
+                        o.start();
+                        o.stop(audioContext.currentTime + 0.04);
+                    }, i * 30);
+                });
+            }
+        }
+        
+        function stopMusic() {
+            if (currentMusicInterval) {
+                clearInterval(currentMusicInterval);
+                currentMusicInterval = null;
+            }
+        }
+        
+        function playMusicNote(freq, duration, waveType, volume) {
+            if (!audioContext || !soundEnabled) return;
+            
+            const oscillator = audioContext.createOscillator();
+            const gainNode = audioContext.createGain();
+            
+            oscillator.type = waveType;
+            oscillator.frequency.setValueAtTime(freq, audioContext.currentTime);
+            
+            // ADSR envelope for smoother sound
+            gainNode.gain.setValueAtTime(0, audioContext.currentTime);
+            gainNode.gain.linearRampToValueAtTime(volume, audioContext.currentTime + 0.02);
+            gainNode.gain.linearRampToValueAtTime(volume * 0.7, audioContext.currentTime + duration * 0.3);
+            gainNode.gain.linearRampToValueAtTime(0, audioContext.currentTime + duration);
+            
+            oscillator.connect(gainNode);
+            gainNode.connect(masterGain);
+            
+            oscillator.start();
+            oscillator.stop(audioContext.currentTime + duration);
+        }
+        
+        function changeEraMusic() {
+            stopMusic();
+            if (soundEnabled && gameState.running) {
+                setTimeout(startMusic, 500);
+            }
+        }
+        
+        // Create background stars
+        const starsContainer = document.getElementById('stars');
+        for (let i = 0; i < 100; i++) {
+            const star = document.createElement('div');
+            star.className = 'star';
+            star.style.left = Math.random() * 100 + '%';
+            star.style.top = Math.random() * 100 + '%';
+            star.style.width = star.style.height = Math.random() * 3 + 1 + 'px';
+            star.style.animationDelay = Math.random() * 2 + 's';
+            starsContainer.appendChild(star);
+        }
+
+        // Game Setup
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+        
+        // Era Themes
+        const eras = [
+            { 
+                name: 'Lover Era', 
+                bg1: '#ffb6c1', 
+                bg2: '#ff69b4', 
+                ground: '#ff1493',
+                platformColor: '#ff85a2',
+                accent: '#ff6b9d'
+            },
+            { 
+                name: 'Midnight Era', 
+                bg1: '#191970', 
+                bg2: '#000080', 
+                ground: '#4169e1',
+                platformColor: '#6495ed',
+                accent: '#87ceeb'
+            },
+            { 
+                name: 'Folklore Era', 
+                bg1: '#8b9dc3', 
+                bg2: '#6b7b8c', 
+                ground: '#2f4f4f',
+                platformColor: '#708090',
+                accent: '#b0c4de'
+            },
+            { 
+                name: 'Reputation Era', 
+                bg1: '#1a1a1a', 
+                bg2: '#2d2d2d', 
+                ground: '#4a4a4a',
+                platformColor: '#333333',
+                accent: '#ffd700'
+            },
+            { 
+                name: '1989 Era', 
+                bg1: '#87ceeb', 
+                bg2: '#add8e6', 
+                ground: '#4682b4',
+                platformColor: '#5f9ea0',
+                accent: '#ff6347'
+            }
+        ];
+
+        // Game State
+        let gameState = {
+            running: false,
+            score: 0,
+            bracelets: 0,
+            lives: 3,
+            currentEra: 0,
+            levelComplete: false,
+            cameraX: 0,
+            levelLength: 3000,
+            braceletsNeeded: 5
+        };
+
+        // Player
+        const player = {
+            x: 100,
+            y: 350,
+            width: 40,
+            height: 50,
+            velocityX: 0,
+            velocityY: 0,
+            speed: 5,
+            jumpForce: -15,
+            gravity: 0.6,
+            grounded: false,
+            facingRight: true,
+            animFrame: 0,
+            sparkleTimer: 0,
+            invincible: false,
+            invincibleTimer: 0,
+            doubleJump: false,
+            hasDoubleJumped: false
+        };
+
+        // Game Objects
+        let platforms = [];
+        let collectibles = [];
+        let obstacles = [];
+        let particles = [];
+        let clouds = [];
+
+        // Controls
+        const keys = {
+            left: false,
+            right: false,
+            up: false,
+            space: false
+        };
+
+        // Input Handling
+        document.addEventListener('keydown', (e) => {
+            if (e.code === 'ArrowLeft' || e.code === 'KeyA') keys.left = true;
+            if (e.code === 'ArrowRight' || e.code === 'KeyD') keys.right = true;
+            if (e.code === 'ArrowUp' || e.code === 'KeyW') keys.up = true;
+            if (e.code === 'Space') keys.space = true;
+            
+            if ((e.code === 'ArrowUp' || e.code === 'Space') && gameState.running) {
+                e.preventDefault();
+                jump();
+            }
+        });
+
+        document.addEventListener('keyup', (e) => {
+            if (e.code === 'ArrowLeft' || e.code === 'KeyA') keys.left = false;
+            if (e.code === 'ArrowRight' || e.code === 'KeyD') keys.right = false;
+            if (e.code === 'ArrowUp' || e.code === 'KeyW') keys.up = false;
+            if (e.code === 'Space') keys.space = false;
+        });
+
+        // Mobile controls
+        const leftBtn = document.getElementById('leftBtn');
+        const rightBtn = document.getElementById('rightBtn');
+        const jumpBtn = document.getElementById('jumpBtn');
+
+        leftBtn.addEventListener('touchstart', (e) => { e.preventDefault(); keys.left = true; });
+        leftBtn.addEventListener('touchend', (e) => { e.preventDefault(); keys.left = false; });
+        rightBtn.addEventListener('touchstart', (e) => { e.preventDefault(); keys.right = true; });
+        rightBtn.addEventListener('touchend', (e) => { e.preventDefault(); keys.right = false; });
+        jumpBtn.addEventListener('touchstart', (e) => { e.preventDefault(); jump(); });
+
+        function jump() {
+            if (player.grounded) {
+                player.velocityY = player.jumpForce;
+                player.grounded = false;
+                player.hasDoubleJumped = false;
+                createJumpParticles();
+                playSound('jump');
+            } else if (player.doubleJump && !player.hasDoubleJumped) {
+                player.velocityY = player.jumpForce * 0.8;
+                player.hasDoubleJumped = true;
+                createJumpParticles();
+                playSound('doubleJump');
+            }
+        }
+
+        function createJumpParticles() {
+            for (let i = 0; i < 8; i++) {
+                particles.push({
+                    x: player.x + player.width / 2,
+                    y: player.y + player.height,
+                    velocityX: (Math.random() - 0.5) * 6,
+                    velocityY: Math.random() * 3,
+                    size: Math.random() * 6 + 3,
+                    color: eras[gameState.currentEra].accent,
+                    life: 1,
+                    type: 'dust'
+                });
+            }
+        }
+
+        function generateLevel() {
+            platforms = [];
+            collectibles = [];
+            obstacles = [];
+            clouds = [];
+            
+            // Ground platform
+            platforms.push({
+                x: 0,
+                y: 430,
+                width: gameState.levelLength + 500,
+                height: 70,
+                isGround: true
+            });
+
+            // Generate platforms
+            let lastX = 200;
+            while (lastX < gameState.levelLength) {
+                const width = Math.random() * 100 + 80;
+                const height = 20;
+                const y = Math.random() * 150 + 200;
+                
+                platforms.push({
+                    x: lastX,
+                    y: y,
+                    width: width,
+                    height: height,
+                    isGround: false
+                });
+
+                // Add collectible on platform
+                if (Math.random() > 0.3) {
+                    const type = Math.random() > 0.7 ? 'bracelet' : 'sparkle';
+                    collectibles.push({
+                        x: lastX + width / 2 - 15,
+                        y: y - 40,
+                        width: 30,
+                        height: 30,
+                        type: type,
+                        collected: false,
+                        bobOffset: Math.random() * Math.PI * 2
+                    });
+                }
+
+                lastX += width + Math.random() * 150 + 100;
+            }
+
+            // Add some ground collectibles
+            for (let i = 300; i < gameState.levelLength; i += Math.random() * 200 + 150) {
+                const type = Math.random() > 0.6 ? 'bracelet' : (Math.random() > 0.5 ? 'sparkle' : 'star');
+                collectibles.push({
+                    x: i,
+                    y: 385,
+                    width: 30,
+                    height: 30,
+                    type: type,
+                    collected: false,
+                    bobOffset: Math.random() * Math.PI * 2
+                });
+            }
+
+            // Add power-ups
+            for (let i = 500; i < gameState.levelLength; i += Math.random() * 800 + 600) {
+                collectibles.push({
+                    x: i,
+                    y: Math.random() * 100 + 250,
+                    width: 35,
+                    height: 35,
+                    type: 'microphone',
+                    collected: false,
+                    bobOffset: Math.random() * Math.PI * 2
+                });
+            }
+
+            // Add obstacles - RIVAL SINGERS! 🎤😈
+            const rivalTypes = ['diva', 'rockstar', 'rapper'];
+            const rivalColors = ['#9b59b6', '#e74c3c', '#2ecc71', '#f39c12', '#3498db'];
+            for (let i = 400; i < gameState.levelLength; i += Math.random() * 300 + 200) {
+                const moveType = Math.random();
+                obstacles.push({
+                    x: i,
+                    y: 390,
+                    startX: i,
+                    startY: 390,
+                    width: 50,
+                    height: 60,
+                    type: rivalTypes[Math.floor(Math.random() * rivalTypes.length)],
+                    color: rivalColors[Math.floor(Math.random() * rivalColors.length)],
+                    // Movement patterns
+                    movePattern: moveType < 0.4 ? 'patrol' : (moveType < 0.7 ? 'bounce' : 'dance'),
+                    moveSpeed: Math.random() * 1.5 + 1,
+                    moveRange: Math.random() * 60 + 40,
+                    moveTimer: Math.random() * Math.PI * 2,
+                    direction: 1,
+                    animFrame: Math.random() * Math.PI * 2
+                });
+            }
+
+            // Add clouds
+            for (let i = 0; i < gameState.levelLength; i += Math.random() * 200 + 100) {
+                clouds.push({
+                    x: i,
+                    y: Math.random() * 100 + 30,
+                    width: Math.random() * 80 + 60,
+                    speed: Math.random() * 0.3 + 0.1
+                });
+            }
+
+            // Add finish line collectible
+            collectibles.push({
+                x: gameState.levelLength - 50,
+                y: 380,
+                width: 50,
+                height: 50,
+                type: 'trophy',
+                collected: false,
+                bobOffset: 0
+            });
+        }
+
+        function startGame() {
+            // Initialize audio on first user interaction
+            initAudio();
+            
+            document.getElementById('startScreen').classList.add('hidden');
+            document.getElementById('gameOverScreen').classList.add('hidden');
+            document.getElementById('winScreen').classList.add('hidden');
+            
+            gameState = {
+                running: true,
+                score: 0,
+                bracelets: 0,
+                lives: 3,
+                currentEra: 0,
+                levelComplete: false,
+                cameraX: 0,
+                levelLength: 3000,
+                braceletsNeeded: 5
+            };
+            
+            player.x = 100;
+            player.y = 350;
+            player.velocityX = 0;
+            player.velocityY = 0;
+            player.grounded = false;
+            player.invincible = false;
+            player.doubleJump = false;
+            
+            particles = [];
+            
+            updateHUD();
+            generateLevel();
+            
+            // Start the music!
+            stopMusic();
+            startMusic();
+            
+            gameLoop();
+        }
+
+        function nextLevel() {
+            gameState.currentEra++;
+            gameState.levelComplete = false;
+            gameState.cameraX = 0;
+            
+            if (gameState.currentEra >= eras.length) {
+                // Won the game!
+                gameState.running = false;
+                stopMusic();
+                playVictoryFanfare();
+                document.getElementById('winScore').textContent = gameState.score;
+                document.getElementById('winBracelets').textContent = gameState.bracelets;
+                document.getElementById('winScreen').classList.remove('hidden');
+                return;
+            }
+            
+            player.x = 100;
+            player.y = 350;
+            player.velocityX = 0;
+            player.velocityY = 0;
+            player.doubleJump = false;
+            
+            generateLevel();
+            updateHUD();
+            
+            // Change music for new era
+            changeEraMusic();
+        }
+
+        function gameOver() {
+            gameState.running = false;
+            stopMusic();
+            playSound('gameOver');
+            document.getElementById('finalScore').textContent = gameState.score;
+            document.getElementById('finalBracelets').textContent = gameState.bracelets;
+            document.getElementById('gameOverScreen').classList.remove('hidden');
+        }
+
+        function updateHUD() {
+            document.getElementById('lives').textContent = gameState.lives;
+            document.getElementById('bracelets').textContent = gameState.bracelets;
+            document.getElementById('score').textContent = gameState.score;
+            document.getElementById('eraBadge').textContent = eras[gameState.currentEra].name;
+        }
+
+        function update() {
+            if (!gameState.running || gameState.levelComplete) return;
+
+            // Player movement
+            if (keys.left) {
+                player.velocityX = -player.speed;
+                player.facingRight = false;
+            } else if (keys.right) {
+                player.velocityX = player.speed;
+                player.facingRight = true;
+            } else {
+                player.velocityX *= 0.8;
+            }
+
+            // Apply gravity
+            player.velocityY += player.gravity;
+            
+            // Update position
+            player.x += player.velocityX;
+            player.y += player.velocityY;
+
+            // Platform collision
+            player.grounded = false;
+            for (const platform of platforms) {
+                if (player.x + player.width > platform.x - gameState.cameraX &&
+                    player.x < platform.x + platform.width - gameState.cameraX &&
+                    player.y + player.height > platform.y &&
+                    player.y + player.height < platform.y + platform.height + 20 &&
+                    player.velocityY >= 0) {
+                    player.y = platform.y - player.height;
+                    player.velocityY = 0;
+                    player.grounded = true;
+                    player.hasDoubleJumped = false;
+                }
+            }
+
+            // World bounds - prevent falling off
+            if (player.y > 500) {
+                takeDamage();
+            }
+
+            // Camera follow - smooth camera that keeps player visible
+            const screenLeftBound = 100;  // Don't let player go past this on left side of screen
+            const screenRightBound = 500; // Don't let player go past this on right side of screen
+            
+            // Calculate player's position on screen
+            const playerScreenX = player.x - gameState.cameraX;
+            
+            // If player is too far right on screen, move camera right
+            if (playerScreenX > screenRightBound) {
+                gameState.cameraX = player.x - screenRightBound;
+            }
+            
+            // If player is too far left on screen, move camera left
+            if (playerScreenX < screenLeftBound) {
+                gameState.cameraX = player.x - screenLeftBound;
+            }
+            
+            // Don't let camera go below 0
+            if (gameState.cameraX < 0) {
+                gameState.cameraX = 0;
+            }
+            
+            // Don't let camera go past level end
+            const maxCameraX = gameState.levelLength - 600;
+            if (gameState.cameraX > maxCameraX) {
+                gameState.cameraX = maxCameraX;
+            }
+            
+            // Keep player within world bounds (can't go left of world start)
+            if (player.x < 0) {
+                player.x = 0;
+            }
+            
+            // Keep player within visible screen (safety check)
+            const finalPlayerScreenX = player.x - gameState.cameraX;
+            if (finalPlayerScreenX < 20) {
+                player.x = gameState.cameraX + 20;
+            }
+            if (finalPlayerScreenX > canvas.width - 60) {
+                player.x = gameState.cameraX + canvas.width - 60;
+            }
+
+            // Collectible collision
+            for (const item of collectibles) {
+                if (item.collected) continue;
+                
+                const itemScreenX = item.x - gameState.cameraX;
+                if (player.x + player.width > itemScreenX &&
+                    player.x < itemScreenX + item.width &&
+                    player.y + player.height > item.y &&
+                    player.y < item.y + item.height) {
+                    
+                    item.collected = true;
+                    
+                    if (item.type === 'bracelet') {
+                        gameState.bracelets++;
+                        gameState.score += 100;
+                        createCollectParticles(itemScreenX + item.width/2, item.y + item.height/2, '#ff6b9d');
+                        playSound('bracelet');
+                    } else if (item.type === 'sparkle') {
+                        gameState.score += 25;
+                        createCollectParticles(itemScreenX + item.width/2, item.y + item.height/2, '#ffd700');
+                        playSound('collect');
+                    } else if (item.type === 'star') {
+                        gameState.score += 50;
+                        createCollectParticles(itemScreenX + item.width/2, item.y + item.height/2, '#ff69b4');
+                        playSound('collect');
+                    } else if (item.type === 'microphone') {
+                        player.doubleJump = true;
+                        player.invincible = true;
+                        player.invincibleTimer = 300;
+                        gameState.score += 200;
+                        createCollectParticles(itemScreenX + item.width/2, item.y + item.height/2, '#a855f7');
+                        playSound('powerup');
+                    } else if (item.type === 'trophy') {
+                        gameState.levelComplete = true;
+                        gameState.score += 500;
+                        playSound('levelComplete');
+                        setTimeout(nextLevel, 2000);
+                    }
+                    
+                    updateHUD();
+                }
+            }
+
+            // Update obstacle positions (rival singers move!)
+            for (const obs of obstacles) {
+                obs.moveTimer += 0.05;
+                obs.animFrame += 0.1;
+                
+                if (obs.movePattern === 'patrol') {
+                    // Walk back and forth
+                    obs.x = obs.startX + Math.sin(obs.moveTimer) * obs.moveRange;
+                } else if (obs.movePattern === 'bounce') {
+                    // Bounce up and down while moving slightly
+                    obs.y = obs.startY - Math.abs(Math.sin(obs.moveTimer * 2)) * 30;
+                    obs.x = obs.startX + Math.sin(obs.moveTimer * 0.5) * obs.moveRange * 0.5;
+                } else if (obs.movePattern === 'dance') {
+                    // Dance in place with side-to-side movement
+                    obs.x = obs.startX + Math.sin(obs.moveTimer * 3) * 20;
+                    obs.y = obs.startY - Math.abs(Math.sin(obs.moveTimer * 4)) * 15;
+                }
+            }
+            
+            // Obstacle collision
+            if (!player.invincible) {
+                for (const obs of obstacles) {
+                    const obsScreenX = obs.x - gameState.cameraX;
+                    if (player.x + player.width > obsScreenX + 8 &&
+                        player.x < obsScreenX + obs.width - 8 &&
+                        player.y + player.height > obs.y + 8 &&
+                        player.y < obs.y + obs.height - 8) {
+                        takeDamage();
+                        break;
+                    }
+                }
+            }
+
+            // Update invincibility
+            if (player.invincible) {
+                player.invincibleTimer--;
+                if (player.invincibleTimer <= 0) {
+                    player.invincible = false;
+                }
+            }
+
+            // Update particles
+            for (let i = particles.length - 1; i >= 0; i--) {
+                const p = particles[i];
+                p.x += p.velocityX;
+                p.y += p.velocityY;
+                p.life -= 0.02;
+                
+                if (p.type === 'dust') {
+                    p.velocityY += 0.1;
+                } else {
+                    p.velocityY -= 0.05;
+                }
+                
+                if (p.life <= 0) {
+                    particles.splice(i, 1);
+                }
+            }
+
+            // Player sparkle trail
+            player.sparkleTimer++;
+            if (player.sparkleTimer > 5) {
+                player.sparkleTimer = 0;
+                particles.push({
+                    x: player.x + player.width / 2 + (Math.random() - 0.5) * 20,
+                    y: player.y + player.height - 5,
+                    velocityX: (Math.random() - 0.5) * 2,
+                    velocityY: Math.random() * 2,
+                    size: Math.random() * 4 + 2,
+                    color: player.invincible ? '#ffd700' : eras[gameState.currentEra].accent,
+                    life: 0.8,
+                    type: 'sparkle'
+                });
+            }
+
+            // Animation frame
+            if (Math.abs(player.velocityX) > 0.5) {
+                player.animFrame = (player.animFrame + 0.2) % 4;
+            } else {
+                player.animFrame = 0;
+            }
+        }
+
+        function takeDamage() {
+            if (player.invincible) return;
+            
+            gameState.lives--;
+            updateHUD();
+            playSound('hurt');
+            
+            if (gameState.lives <= 0) {
+                gameOver();
+            } else {
+                player.invincible = true;
+                player.invincibleTimer = 120;
+                player.x = Math.max(100, gameState.cameraX + 100);
+                player.y = 300;
+                player.velocityX = 0;
+                player.velocityY = 0;
+            }
+        }
+
+        function createCollectParticles(x, y, color) {
+            for (let i = 0; i < 12; i++) {
+                const angle = (Math.PI * 2 * i) / 12;
+                particles.push({
+                    x: x,
+                    y: y,
+                    velocityX: Math.cos(angle) * 4,
+                    velocityY: Math.sin(angle) * 4,
+                    size: Math.random() * 6 + 4,
+                    color: color,
+                    life: 1,
+                    type: 'collect'
+                });
+            }
+        }
+
+        // Draw DIVA rival singer
+        function drawDivaRival(ctx, obs) {
+            const bounce = Math.sin(obs.animFrame * 2) * 3;
+            
+            // Sparkle aura (they think they're fabulous)
+            ctx.fillStyle = 'rgba(255, 215, 0, 0.2)';
+            ctx.beginPath();
+            ctx.arc(0, -5 + bounce, 35, 0, Math.PI * 2);
+            ctx.fill();
+            
+            // Big dramatic dress
+            const dressGrad = ctx.createLinearGradient(0, 0, 0, 30);
+            dressGrad.addColorStop(0, obs.color);
+            dressGrad.addColorStop(1, '#1a1a2e');
+            ctx.fillStyle = dressGrad;
+            ctx.beginPath();
+            ctx.moveTo(-15, 0 + bounce);
+            ctx.lineTo(-22, 28 + bounce);
+            ctx.lineTo(22, 28 + bounce);
+            ctx.lineTo(15, 0 + bounce);
+            ctx.closePath();
+            ctx.fill();
+            
+            // Body
+            ctx.fillStyle = '#d4a574';
+            ctx.beginPath();
+            ctx.ellipse(0, -5 + bounce, 10, 12, 0, 0, Math.PI * 2);
+            ctx.fill();
+            
+            // Big diva hair
+            ctx.fillStyle = '#2c1810';
+            ctx.beginPath();
+            ctx.arc(0, -22 + bounce, 16, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.beginPath();
+            ctx.ellipse(-14, -15 + bounce, 6, 12, -0.3, 0, Math.PI * 2);
+            ctx.ellipse(14, -15 + bounce, 6, 12, 0.3, 0, Math.PI * 2);
+            ctx.fill();
+            
+            // Head
+            ctx.fillStyle = '#d4a574';
+            ctx.beginPath();
+            ctx.arc(0, -18 + bounce, 11, 0, Math.PI * 2);
+            ctx.fill();
+            
+            // Angry/jealous eyes
+            ctx.fillStyle = 'white';
+            ctx.beginPath();
+            ctx.ellipse(-4, -18 + bounce, 4, 3, 0, 0, Math.PI * 2);
+            ctx.ellipse(4, -18 + bounce, 4, 3, 0, 0, Math.PI * 2);
+            ctx.fill();
+            
+            ctx.fillStyle = '#8b0000';
+            ctx.beginPath();
+            ctx.arc(-4, -18 + bounce, 2, 0, Math.PI * 2);
+            ctx.arc(4, -18 + bounce, 2, 0, Math.PI * 2);
+            ctx.fill();
+            
+            // Evil smirk
+            ctx.strokeStyle = '#8b0000';
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            ctx.arc(0, -14 + bounce, 5, 0.3, Math.PI - 0.3);
+            ctx.stroke();
+            
+            // Microphone in hand
+            ctx.fillStyle = '#c0c0c0';
+            ctx.fillRect(18, -5 + bounce, 4, 15);
+            ctx.fillStyle = '#333';
+            ctx.beginPath();
+            ctx.arc(20, -8 + bounce, 5, 0, Math.PI * 2);
+            ctx.fill();
+        }
+        
+        // Draw ROCKSTAR rival
+        function drawRockstarRival(ctx, obs) {
+            const bounce = Math.sin(obs.animFrame * 3) * 4;
+            const headbang = Math.sin(obs.animFrame * 4) * 0.15;
+            
+            ctx.rotate(headbang);
+            
+            // Leather jacket
+            ctx.fillStyle = '#1a1a1a';
+            ctx.beginPath();
+            ctx.moveTo(-18, 0 + bounce);
+            ctx.lineTo(-15, 25 + bounce);
+            ctx.lineTo(15, 25 + bounce);
+            ctx.lineTo(18, 0 + bounce);
+            ctx.closePath();
+            ctx.fill();
+            
+            // Jacket details
+            ctx.strokeStyle = '#444';
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            ctx.moveTo(0, 0 + bounce);
+            ctx.lineTo(0, 25 + bounce);
+            ctx.stroke();
+            
+            // Spiky hair
+            ctx.fillStyle = obs.color;
+            for (let i = -3; i <= 3; i++) {
+                ctx.beginPath();
+                ctx.moveTo(i * 5 - 3, -20 + bounce);
+                ctx.lineTo(i * 5, -35 - Math.abs(i) * 2 + bounce);
+                ctx.lineTo(i * 5 + 3, -20 + bounce);
+                ctx.fill();
+            }
+            
+            // Head
+            ctx.fillStyle = '#e8c39e';
+            ctx.beginPath();
+            ctx.arc(0, -15 + bounce, 12, 0, Math.PI * 2);
+            ctx.fill();
+            
+            // Cool sunglasses
+            ctx.fillStyle = '#000';
+            ctx.fillRect(-10, -18 + bounce, 8, 5);
+            ctx.fillRect(2, -18 + bounce, 8, 5);
+            ctx.fillRect(-2, -16 + bounce, 4, 2);
+            
+            // Sneer
+            ctx.strokeStyle = '#8b0000';
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            ctx.moveTo(-5, -8 + bounce);
+            ctx.lineTo(0, -10 + bounce);
+            ctx.lineTo(5, -8 + bounce);
+            ctx.stroke();
+            
+            // Electric guitar
+            ctx.fillStyle = obs.color;
+            ctx.beginPath();
+            ctx.ellipse(-20, 10 + bounce, 8, 12, 0.3, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.fillStyle = '#4a3728';
+            ctx.fillRect(-22, -10 + bounce, 4, 20);
+        }
+        
+        // Draw RAPPER rival
+        function drawRapperRival(ctx, obs) {
+            const bounce = Math.abs(Math.sin(obs.animFrame * 2)) * 5;
+            const swagger = Math.sin(obs.animFrame) * 0.08;
+            
+            ctx.rotate(swagger);
+            
+            // Baggy outfit
+            ctx.fillStyle = obs.color;
+            ctx.beginPath();
+            ctx.moveTo(-16, 0 + bounce);
+            ctx.lineTo(-20, 28 + bounce);
+            ctx.lineTo(20, 28 + bounce);
+            ctx.lineTo(16, 0 + bounce);
+            ctx.closePath();
+            ctx.fill();
+            
+            // Chain/bling
+            ctx.strokeStyle = '#ffd700';
+            ctx.lineWidth = 3;
+            ctx.beginPath();
+            ctx.arc(0, 5 + bounce, 8, 0, Math.PI);
+            ctx.stroke();
+            ctx.fillStyle = '#ffd700';
+            ctx.beginPath();
+            ctx.arc(0, 13 + bounce, 4, 0, Math.PI * 2);
+            ctx.fill();
+            
+            // Head
+            ctx.fillStyle = '#8b5a2b';
+            ctx.beginPath();
+            ctx.arc(0, -15 + bounce, 12, 0, Math.PI * 2);
+            ctx.fill();
+            
+            // Baseball cap (backwards)
+            ctx.fillStyle = '#1a1a1a';
+            ctx.beginPath();
+            ctx.arc(0, -20 + bounce, 13, Math.PI, 0, true);
+            ctx.fill();
+            ctx.fillRect(8, -22 + bounce, 12, 6);
+            
+            // Cool shades
+            ctx.fillStyle = '#000';
+            ctx.fillRect(-9, -17 + bounce, 7, 4);
+            ctx.fillRect(2, -17 + bounce, 7, 4);
+            
+            // Mean expression
+            ctx.strokeStyle = '#fff';
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            ctx.moveTo(-4, -8 + bounce);
+            ctx.lineTo(4, -8 + bounce);
+            ctx.stroke();
+            
+            // Mic drop pose
+            ctx.fillStyle = '#c0c0c0';
+            ctx.save();
+            ctx.translate(18, 15 + bounce);
+            ctx.rotate(0.5 + Math.sin(obs.animFrame) * 0.2);
+            ctx.fillRect(-2, -8, 4, 12);
+            ctx.fillStyle = '#333';
+            ctx.beginPath();
+            ctx.arc(0, -10, 4, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.restore();
+        }
+
+        function draw() {
+            const era = eras[gameState.currentEra];
+            
+            // Background gradient
+            const gradient = ctx.createLinearGradient(0, 0, 0, canvas.height);
+            gradient.addColorStop(0, era.bg1);
+            gradient.addColorStop(1, era.bg2);
+            ctx.fillStyle = gradient;
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            // Draw clouds
+            ctx.fillStyle = 'rgba(255, 255, 255, 0.3)';
+            for (const cloud of clouds) {
+                const cloudX = cloud.x - gameState.cameraX * 0.3;
+                if (cloudX > -100 && cloudX < canvas.width + 100) {
+                    drawCloud(cloudX, cloud.y, cloud.width);
+                }
+            }
+
+            // Draw platforms
+            for (const platform of platforms) {
+                const screenX = platform.x - gameState.cameraX;
+                if (screenX > -platform.width && screenX < canvas.width) {
+                    if (platform.isGround) {
+                        ctx.fillStyle = era.ground;
+                        ctx.fillRect(screenX, platform.y, platform.width, platform.height);
+                        
+                        // Grass top
+                        ctx.fillStyle = era.platformColor;
+                        ctx.fillRect(screenX, platform.y, platform.width, 10);
+                    } else {
+                        // Floating platform
+                        ctx.fillStyle = era.platformColor;
+                        ctx.beginPath();
+                        ctx.roundRect(screenX, platform.y, platform.width, platform.height, 8);
+                        ctx.fill();
+                        
+                        // Platform shine
+                        ctx.fillStyle = 'rgba(255, 255, 255, 0.3)';
+                        ctx.beginPath();
+                        ctx.roundRect(screenX + 5, platform.y + 3, platform.width - 10, 6, 3);
+                        ctx.fill();
+                    }
+                }
+            }
+
+            // Draw collectibles
+            const time = Date.now() / 200;
+            for (const item of collectibles) {
+                if (item.collected) continue;
+                
+                const screenX = item.x - gameState.cameraX;
+                if (screenX > -50 && screenX < canvas.width + 50) {
+                    const bobY = item.y + Math.sin(time + item.bobOffset) * 5;
+                    
+                    ctx.save();
+                    ctx.translate(screenX + item.width/2, bobY + item.height/2);
+                    
+                    if (item.type === 'bracelet') {
+                        // Friendship bracelet
+                        ctx.strokeStyle = '#ff6b9d';
+                        ctx.lineWidth = 6;
+                        ctx.beginPath();
+                        ctx.ellipse(0, 0, 12, 8, 0, 0, Math.PI * 2);
+                        ctx.stroke();
+                        
+                        // Beads
+                        const colors = ['#ff69b4', '#87ceeb', '#98fb98', '#ffd700', '#dda0dd'];
+                        for (let i = 0; i < 5; i++) {
+                            const angle = (Math.PI * 2 * i) / 5 - Math.PI/2;
+                            ctx.fillStyle = colors[i];
+                            ctx.beginPath();
+                            ctx.arc(Math.cos(angle) * 12, Math.sin(angle) * 8, 4, 0, Math.PI * 2);
+                            ctx.fill();
+                        }
+                    } else if (item.type === 'sparkle') {
+                        drawSparkle(0, 0, 12, '#ffd700');
+                    } else if (item.type === 'star') {
+                        drawStar(0, 0, 10, 5, '#ff69b4');
+                    } else if (item.type === 'microphone') {
+                        // Microphone power-up
+                        ctx.fillStyle = '#c0c0c0';
+                        ctx.beginPath();
+                        ctx.roundRect(-6, -12, 12, 20, 6);
+                        ctx.fill();
+                        
+                        ctx.fillStyle = '#808080';
+                        ctx.fillRect(-3, 8, 6, 10);
+                        
+                        ctx.fillStyle = '#a855f7';
+                        ctx.beginPath();
+                        ctx.arc(0, -5, 8, 0, Math.PI * 2);
+                        ctx.fill();
+                        
+                        // Glow
+                        ctx.strokeStyle = 'rgba(168, 85, 247, 0.5)';
+                        ctx.lineWidth = 2;
+                        ctx.beginPath();
+                        ctx.arc(0, 0, 18 + Math.sin(time * 2) * 3, 0, Math.PI * 2);
+                        ctx.stroke();
+                    } else if (item.type === 'trophy') {
+                        // Trophy
+                        ctx.fillStyle = '#ffd700';
+                        ctx.beginPath();
+                        ctx.moveTo(-15, -15);
+                        ctx.lineTo(15, -15);
+                        ctx.lineTo(12, 5);
+                        ctx.lineTo(-12, 5);
+                        ctx.closePath();
+                        ctx.fill();
+                        
+                        ctx.fillRect(-5, 5, 10, 8);
+                        ctx.fillRect(-10, 13, 20, 5);
+                        
+                        // Star on trophy
+                        drawStar(0, -5, 6, 3, '#ff6347');
+                        
+                        // Glow
+                        ctx.strokeStyle = 'rgba(255, 215, 0, 0.5)';
+                        ctx.lineWidth = 3;
+                        ctx.beginPath();
+                        ctx.arc(0, 0, 25 + Math.sin(time * 2) * 5, 0, Math.PI * 2);
+                        ctx.stroke();
+                    }
+                    
+                    ctx.restore();
+                }
+            }
+
+            // Draw obstacles - RIVAL SINGERS!
+            for (const obs of obstacles) {
+                const screenX = obs.x - gameState.cameraX;
+                if (screenX > -50 && screenX < canvas.width + 50) {
+                    ctx.save();
+                    ctx.translate(screenX + obs.width/2, obs.y + obs.height/2);
+                    
+                    // Dance animation wobble
+                    const wobble = Math.sin(obs.animFrame) * 0.1;
+                    ctx.rotate(wobble);
+                    
+                    // Draw rival singer based on type
+                    if (obs.type === 'diva') {
+                        drawDivaRival(ctx, obs);
+                    } else if (obs.type === 'rockstar') {
+                        drawRockstarRival(ctx, obs);
+                    } else {
+                        drawRapperRival(ctx, obs);
+                    }
+                    
+                    ctx.restore();
+                }
+            }
+
+            // Draw particles
+            for (const p of particles) {
+                ctx.globalAlpha = p.life;
+                ctx.fillStyle = p.color;
+                
+                if (p.type === 'sparkle') {
+                    drawSparkle(p.x, p.y, p.size, p.color);
+                } else {
+                    ctx.beginPath();
+                    ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+                    ctx.fill();
+                }
+                
+                ctx.globalAlpha = 1;
+            }
+
+            // Draw player
+            const playerBob = player.grounded ? Math.sin(Date.now() / 150) * 2 : 0;
+            const playerY = player.y + playerBob;
+            
+            ctx.save();
+            ctx.translate(player.x + player.width/2, playerY + player.height/2);
+            if (!player.facingRight) ctx.scale(-1, 1);
+            
+            // Invincibility effect
+            if (player.invincible && Math.floor(player.invincibleTimer / 5) % 2 === 0) {
+                ctx.globalAlpha = 0.5;
+            }
+            
+            // Glow when powered up
+            if (player.doubleJump) {
+                ctx.shadowColor = '#a855f7';
+                ctx.shadowBlur = 20;
+            }
+            
+            // Body
+            const dressGradient = ctx.createLinearGradient(0, -20, 0, 25);
+            dressGradient.addColorStop(0, '#ff69b4');
+            dressGradient.addColorStop(1, '#ff1493');
+            ctx.fillStyle = dressGradient;
+            
+            // Dress
+            ctx.beginPath();
+            ctx.moveTo(-12, -5);
+            ctx.lineTo(-18, 25);
+            ctx.lineTo(18, 25);
+            ctx.lineTo(12, -5);
+            ctx.closePath();
+            ctx.fill();
+            
+            // Torso
+            ctx.fillStyle = '#ffdbac';
+            ctx.beginPath();
+            ctx.ellipse(0, -10, 10, 12, 0, 0, Math.PI * 2);
+            ctx.fill();
+            
+            // Head
+            ctx.fillStyle = '#ffdbac';
+            ctx.beginPath();
+            ctx.arc(0, -28, 14, 0, Math.PI * 2);
+            ctx.fill();
+            
+            // Hair
+            ctx.fillStyle = '#daa520';
+            ctx.beginPath();
+            ctx.arc(0, -32, 14, Math.PI, 0, true);
+            ctx.fill();
+            
+            // Hair sides
+            ctx.beginPath();
+            ctx.ellipse(-12, -25, 5, 15, -0.3, 0, Math.PI * 2);
+            ctx.ellipse(12, -25, 5, 15, 0.3, 0, Math.PI * 2);
+            ctx.fill();
+            
+            // Eyes
+            ctx.fillStyle = '#4a90d9';
+            ctx.beginPath();
+            ctx.arc(-5, -28, 3, 0, Math.PI * 2);
+            ctx.arc(5, -28, 3, 0, Math.PI * 2);
+            ctx.fill();
+            
+            // Eye sparkle
+            ctx.fillStyle = 'white';
+            ctx.beginPath();
+            ctx.arc(-4, -29, 1, 0, Math.PI * 2);
+            ctx.arc(6, -29, 1, 0, Math.PI * 2);
+            ctx.fill();
+            
+            // Smile
+            ctx.strokeStyle = '#d47a84';
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            ctx.arc(0, -24, 5, 0.2, Math.PI - 0.2);
+            ctx.stroke();
+            
+            // Blush
+            ctx.fillStyle = 'rgba(255, 182, 193, 0.6)';
+            ctx.beginPath();
+            ctx.ellipse(-9, -24, 4, 2, 0, 0, Math.PI * 2);
+            ctx.ellipse(9, -24, 4, 2, 0, 0, Math.PI * 2);
+            ctx.fill();
+            
+            // Crown/tiara
+            ctx.fillStyle = '#ffd700';
+            ctx.beginPath();
+            ctx.moveTo(-8, -42);
+            ctx.lineTo(-6, -46);
+            ctx.lineTo(-4, -42);
+            ctx.lineTo(0, -48);
+            ctx.lineTo(4, -42);
+            ctx.lineTo(6, -46);
+            ctx.lineTo(8, -42);
+            ctx.lineTo(6, -38);
+            ctx.lineTo(-6, -38);
+            ctx.closePath();
+            ctx.fill();
+            
+            // Gem on tiara
+            ctx.fillStyle = '#ff69b4';
+            ctx.beginPath();
+            ctx.arc(0, -43, 2, 0, Math.PI * 2);
+            ctx.fill();
+            
+            ctx.restore();
+
+            // Level complete banner
+            if (gameState.levelComplete) {
+                ctx.fillStyle = 'rgba(0, 0, 0, 0.5)';
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+                
+                ctx.fillStyle = 'white';
+                ctx.font = 'bold 48px Pacifico';
+                ctx.textAlign = 'center';
+                ctx.fillText('✨ Era Complete! ✨', canvas.width/2, canvas.height/2);
+                
+                ctx.font = '24px Quicksand';
+                ctx.fillText('Get ready for the next era...', canvas.width/2, canvas.height/2 + 50);
+            }
+        }
+
+        function drawCloud(x, y, width) {
+            ctx.beginPath();
+            ctx.arc(x, y, width * 0.3, 0, Math.PI * 2);
+            ctx.arc(x + width * 0.25, y - width * 0.1, width * 0.25, 0, Math.PI * 2);
+            ctx.arc(x + width * 0.5, y, width * 0.3, 0, Math.PI * 2);
+            ctx.arc(x + width * 0.25, y + width * 0.1, width * 0.2, 0, Math.PI * 2);
+            ctx.fill();
+        }
+
+        function drawSparkle(x, y, size, color) {
+            ctx.fillStyle = color;
+            ctx.beginPath();
+            ctx.moveTo(x, y - size);
+            ctx.lineTo(x + size * 0.3, y - size * 0.3);
+            ctx.lineTo(x + size, y);
+            ctx.lineTo(x + size * 0.3, y + size * 0.3);
+            ctx.lineTo(x, y + size);
+            ctx.lineTo(x - size * 0.3, y + size * 0.3);
+            ctx.lineTo(x - size, y);
+            ctx.lineTo(x - size * 0.3, y - size * 0.3);
+            ctx.closePath();
+            ctx.fill();
+        }
+
+        function drawStar(x, y, outerRadius, innerRadius, color) {
+            ctx.fillStyle = color;
+            ctx.beginPath();
+            for (let i = 0; i < 10; i++) {
+                const radius = i % 2 === 0 ? outerRadius : innerRadius;
+                const angle = (Math.PI * 2 * i) / 10 - Math.PI / 2;
+                if (i === 0) {
+                    ctx.moveTo(x + Math.cos(angle) * radius, y + Math.sin(angle) * radius);
+                } else {
+                    ctx.lineTo(x + Math.cos(angle) * radius, y + Math.sin(angle) * radius);
+                }
+            }
+            ctx.closePath();
+            ctx.fill();
+        }
+
+        function gameLoop() {
+            if (!gameState.running && !gameState.levelComplete) return;
+            
+            update();
+            draw();
+            
+            requestAnimationFrame(gameLoop);
+        }
+
+        // Initial draw
+        draw();
+    </script>
+</body>
+</html>
